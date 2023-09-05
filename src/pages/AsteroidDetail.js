@@ -2,14 +2,22 @@ import React, { useEffect, useState } from "react";
 import { Loading, Card } from "../components";
 import { useParams } from "react-router-dom";
 
+const errorData = {
+  name: "-",
+  absolute_magnitude_h: "-",
+  designation: "-",
+  estimated_diameter: { kilometers: { estimated_diameter_max: "-" } },
+};
+
 export const AsteroidDetail = () => {
   const { id } = useParams();
-
   const [asteroid, setAsteroid] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     const fetchAsteroid = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(
           `http://localhost:3001/api/asteroids/${id}`
@@ -24,12 +32,14 @@ export const AsteroidDetail = () => {
         setAsteroid(data);
       } catch (error) {
         console.error("Error fetching asteroid:", error);
+        setAsteroid(errorData);
+        setFetchError(true);
       } finally {
         setIsLoading(false);
       }
     };
     fetchAsteroid();
-  }, []);
+  }, [id]);
 
   return isLoading ? (
     <Loading />
@@ -81,7 +91,7 @@ export const AsteroidDetail = () => {
                     miss_distance,
                     orbiting_body,
                   }) => (
-                    <tr>
+                    <tr key={close_approach_date}>
                       <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                         <p className="text-gray-900 whitespace-no-wrap">
                           {close_approach_date}
@@ -109,6 +119,17 @@ export const AsteroidDetail = () => {
           </table>
         </div>
       </div>
+      {fetchError && (
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-1 rounded relative"
+          role="alert"
+        >
+          <strong className="font-bold">Error</strong>
+          <span className="block sm:inline">
+            , There was a problem while fetching the data.
+          </span>
+        </div>
+      )}
     </>
   );
 };
